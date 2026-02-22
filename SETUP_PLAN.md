@@ -76,16 +76,17 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
-import eslintConfigPrettier from 'eslint-config-prettier'
+import { defineConfig, globalIgnores } from 'eslint/config'
+import eslintConfigPrettier from 'eslint-config-prettier/flat'
 
-export default [
-  { ignores: ['dist'] },
+export default defineConfig([
+  globalIgnores(['dist']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
-      ...tseslint.configs.recommended,
-      reactHooks.configs['flat/recommended'],
+      tseslint.configs.recommended,
+      reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
     ],
     languageOptions: {
@@ -94,7 +95,7 @@ export default [
     },
   },
   eslintConfigPrettier,
-]
+])
 ```
 
 **Add scripts to `package.json`:**
@@ -230,6 +231,7 @@ src/
 ```
 
 **Conventions:**
+
 - Page-specific sub-components live inside their page directory (e.g., `pages/dashboard/BalanceCard.tsx`)
 - Components used by 2+ pages go in `components/`
 - One store per domain concept in `stores/`
@@ -269,11 +271,26 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/transactions" element={<TransactionsPage />} />
-        <Route path="/accounts" element={<AccountsPage />} />
-        <Route path="/budgets" element={<BudgetsPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        <Route
+          path="/"
+          element={<DashboardPage />}
+        />
+        <Route
+          path="/transactions"
+          element={<TransactionsPage />}
+        />
+        <Route
+          path="/accounts"
+          element={<AccountsPage />}
+        />
+        <Route
+          path="/budgets"
+          element={<BudgetsPage />}
+        />
+        <Route
+          path="/settings"
+          element={<SettingsPage />}
+        />
       </Routes>
     </BrowserRouter>
   )
@@ -336,7 +353,8 @@ pnpm add -D prettier-plugin-tailwindcss
   "bracketSpacing": true,
   "arrowParens": "always",
   "endOfLine": "lf",
-  "plugins": ["prettier-plugin-tailwindcss"]
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "tailwindStylesheet": "./src/index.css"
 }
 ```
 
@@ -349,6 +367,7 @@ pnpm dlx shadcn@latest init
 ```
 
 When prompted:
+
 - Style: **New York**
 - Base color: **Slate**
 - CSS variables: **Yes**
@@ -362,6 +381,7 @@ pnpm dlx shadcn@latest add button card table badge input select dialog tabs sepa
 ```
 
 Components most useful for a finance dashboard:
+
 - `card` — dashboard widgets, account summaries, balance displays
 - `table` — transaction lists
 - `badge` — status indicators (paid, pending, overdue)
@@ -398,8 +418,7 @@ interface AccountState {
 export const useAccountStore = create<AccountState>((set) => ({
   accounts: [],
   setAccounts: (accounts) => set({ accounts }),
-  addAccount: (account) =>
-    set((state) => ({ accounts: [...state.accounts, account] })),
+  addAccount: (account) => set((state) => ({ accounts: [...state.accounts, account] })),
 }))
 ```
 
