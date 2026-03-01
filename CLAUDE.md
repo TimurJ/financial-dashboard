@@ -14,13 +14,21 @@ pnpm format:check     # Check formatting without changes
 pnpm preview          # Preview production build
 ```
 
-Testing is not yet configured. When added (Vitest + React Testing Library), tests will use `pnpm test` with files matching `src/**/*.{test,spec}.{ts,tsx}`.
+**Testing**: Vitest + React Testing Library + jest-dom matchers. Globals enabled (`describe`/`it`/`expect` available without imports).
+
+```bash
+pnpm test              # Watch mode for development
+pnpm test:run          # Single run (CI)
+pnpm test:coverage     # With coverage
+```
+
+Test files: `src/**/*.{test,spec}.{ts,tsx}`. Setup file: `src/test/setup.ts`.
 
 ## Architecture
 
 **Stack**: Vite 7 + React 19 + TypeScript 5.9 (strict mode)
 
-This is a finance dashboard app in early setup phase. The project follows a 12-step setup plan in `SETUP_PLAN.md` — steps 1-4 are complete (git, path aliases, prettier/eslint, husky/lint-staged). Remaining steps add: Vitest, folder structure, React Router v7, Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars.
+This is a finance dashboard app in early setup phase. The project follows a 12-step setup plan in `SETUP_PLAN.md` — steps 1-5 are complete (git, path aliases, prettier/eslint, husky/lint-staged, vitest). Remaining steps add: folder structure, React Router v7, Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars.
 
 **Path alias**: `@/*` maps to `./src/*` (configured in both tsconfig.app.json and vite.config.ts).
 

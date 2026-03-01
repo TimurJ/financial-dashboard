@@ -4,16 +4,16 @@
 
 This is a fresh Vite 7 + React 19 + TypeScript 5.9 project (scaffolded via `pnpm create vite`) that still contains the default template boilerplate (counter demo, spinning logos, placeholder CSS). The goal is to set it up with industry best practices before building any dashboard features. The project uses pnpm as its package manager.
 
-**Current state:** Steps 1–4 are complete (git, path aliases, prettier/eslint, husky/lint-staged). Remaining steps: Vitest, folder structure, React Router v7, Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars, boilerplate cleanup.
+**Current state:** Steps 1–5 are complete (git, path aliases, prettier/eslint, husky/lint-staged, vitest). Remaining steps: folder structure, React Router v7, Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars, boilerplate cleanup.
 
 ---
 
-## Step 1: Initialize Git
+## Step 1: Initialize Git ✅
 
 - Run `git init`, add all files, create initial commit
 - Update `.gitignore` to include `coverage/`, `.env`, `.env.local`, `.env.*.local`
 
-## Step 2: Path Aliases (`@/`)
+## Step 2: Path Aliases (`@/`) ✅
 
 - **`tsconfig.app.json`** — add `baseUrl: "."` and `paths: { "@/*": ["./src/*"] }`
 - **`vite.config.ts`** — add `resolve.alias` mapping `@` to `./src`:
@@ -35,7 +35,7 @@ export default defineConfig({
 
 `@types/node` is already installed, so the `path` import works out of the box.
 
-## Step 3: Prettier + ESLint Integration
+## Step 3: Prettier + ESLint Integration ✅
 
 **Install:**
 
@@ -116,7 +116,7 @@ export default defineConfig([
 }
 ```
 
-## Step 4: Husky + lint-staged (Pre-commit Hooks)
+## Step 4: Husky + lint-staged (Pre-commit Hooks) ✅
 
 **Install:**
 
@@ -154,7 +154,7 @@ pnpm exec tsc -b
 
 > Husky requires a git repo — make sure Step 1 is done first.
 
-## Step 5: Vitest + React Testing Library
+## Step 5: Vitest + React Testing Library ✅
 
 **Install:**
 
@@ -162,17 +162,16 @@ pnpm exec tsc -b
 pnpm add -D vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
 ```
 
-**Update `vite.config.ts`** — add the test configuration:
+**Update `vite.config.ts`** — add the Vitest triple-slash reference and test configuration:
 
 ```ts
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite' // added in Step 8
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -182,10 +181,15 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    css: true,
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 })
+```
+
+**Update `tsconfig.app.json`** — add `"vitest/globals"` to the `types` array so TypeScript recognizes `describe`, `it`, `expect`, etc. as globals:
+
+```json
+"types": ["vite/client", "vitest/globals"]
 ```
 
 **Create `src/test/setup.ts`:**
@@ -194,17 +198,17 @@ export default defineConfig({
 import '@testing-library/jest-dom/vitest'
 ```
 
-**Create `src/test/example.test.ts`** (sanity check):
+**Create `src/test/setup.test.ts`** (sanity check):
 
 ```ts
-import { describe, it, expect } from 'vitest'
-
 describe('setup verification', () => {
   it('works', () => {
     expect(1 + 1).toBe(2)
   })
 })
 ```
+
+> **Note:** The original plan included `import tailwindcss from '@tailwindcss/vite'` and `tailwindcss()` in the plugins array here, but Tailwind isn't installed until Step 8. It also included `css: true` in the test config, which is unnecessary without Tailwind/CSS Modules. The test file originally imported `{ describe, it, expect }` from `'vitest'`, but with `globals: true` these are available automatically — explicit imports would cause duplicate-identifier errors in strict TypeScript. The `tsconfig.app.json` update was also missing from the original plan.
 
 **Add scripts to `package.json`:**
 
@@ -322,7 +326,20 @@ pnpm add tailwindcss @tailwindcss/vite
 pnpm add -D prettier-plugin-tailwindcss
 ```
 
-**Update `vite.config.ts`** — add `tailwindcss()` to plugins (see Step 5 for full file).
+**Update `vite.config.ts`** — add the Tailwind plugin:
+
+```diff
+ /// <reference types="vitest/config" />
+ import { defineConfig } from 'vite'
+ import react from '@vitejs/plugin-react'
++import tailwindcss from '@tailwindcss/vite'
+ import path from 'path'
+
+ export default defineConfig({
+-  plugins: [react()],
++  plugins: [react(), tailwindcss()],
+   resolve: {
+```
 
 **Replace `src/index.css` contents:**
 
@@ -539,6 +556,16 @@ interface ImportMeta {
 
 ## All Dependencies Summary
 
+### Already installed (Steps 1–5)
+
+**Dev:**
+
+```bash
+pnpm add -D prettier eslint-config-prettier husky lint-staged vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
+```
+
+### Remaining (Steps 6–12)
+
 **Production:**
 
 ```bash
@@ -548,7 +575,7 @@ pnpm add react-router zustand @tanstack/react-query
 **Dev:**
 
 ```bash
-pnpm add -D prettier eslint-config-prettier prettier-plugin-tailwindcss husky lint-staged vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom tailwindcss @tailwindcss/vite @tanstack/react-query-devtools
+pnpm add -D tailwindcss @tailwindcss/vite prettier-plugin-tailwindcss @tanstack/react-query-devtools
 ```
 
 **CLI (run once):**
@@ -562,10 +589,10 @@ pnpm dlx shadcn@latest add button card table badge input select dialog tabs sepa
 
 ## Verification Checklist
 
-- [ ] `pnpm dev` — dev server starts, dashboard page renders with Tailwind styles
-- [ ] `pnpm build` — production build succeeds with no TypeScript errors
-- [ ] `pnpm test:run` — Vitest runs the sanity test and passes
-- [ ] `pnpm lint` — ESLint runs with no errors
-- [ ] `pnpm format:check` — Prettier reports all files formatted
-- [ ] Make a test commit — Husky pre-commit hook runs lint-staged successfully
-- [ ] Navigate between routes (`/`, `/transactions`, etc.) — React Router works
+- [x] `pnpm build` — production build succeeds with no TypeScript errors
+- [x] `pnpm test:run` — Vitest runs the sanity test and passes
+- [x] `pnpm lint` — ESLint runs with no errors
+- [x] `pnpm format:check` — Prettier reports all files formatted
+- [x] Make a test commit — Husky pre-commit hook runs lint-staged successfully
+- [ ] `pnpm dev` — dev server starts, dashboard page renders with Tailwind styles (needs Step 8)
+- [ ] Navigate between routes (`/`, `/transactions`, etc.) — React Router works (needs Step 7)
