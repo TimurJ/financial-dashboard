@@ -20,11 +20,12 @@ Testing is not yet configured. When added (Vitest + React Testing Library), test
 
 **Stack**: Vite 7 + React 19 + TypeScript 5.9 (strict mode)
 
-This is a finance dashboard app in early setup phase. The project follows a 12-step setup plan in `SETUP_PLAN.md` — steps 1-3 are complete (git, path aliases, prettier/eslint). Remaining steps add: Husky, Vitest, folder structure, React Router v7, Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars.
+This is a finance dashboard app in early setup phase. The project follows a 12-step setup plan in `SETUP_PLAN.md` — steps 1-4 are complete (git, path aliases, prettier/eslint, husky/lint-staged). Remaining steps add: Vitest, folder structure, React Router v7, Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars.
 
 **Path alias**: `@/*` maps to `./src/*` (configured in both tsconfig.app.json and vite.config.ts).
 
 **Planned architecture** (from SETUP_PLAN.md):
+
 - `src/pages/` — route-level components (dashboard, transactions, accounts, budgets, settings)
 - `src/components/ui/` — shadcn/ui components
 - `src/components/layout/` — Sidebar, Header, Footer

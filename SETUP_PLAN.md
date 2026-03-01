@@ -4,7 +4,7 @@
 
 This is a fresh Vite 7 + React 19 + TypeScript 5.9 project (scaffolded via `pnpm create vite`) that still contains the default template boilerplate (counter demo, spinning logos, placeholder CSS). The goal is to set it up with industry best practices before building any dashboard features. The project uses pnpm as its package manager.
 
-**Current state:** No git repo, no Prettier, no testing, no routing, no state management, no UI library, plain CSS only.
+**Current state:** Steps 1–4 are complete (git, path aliases, prettier/eslint, husky/lint-staged). Remaining steps: Vitest, folder structure, React Router v7, Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars, boilerplate cleanup.
 
 ---
 
@@ -54,7 +54,8 @@ pnpm add -D prettier eslint-config-prettier
   "printWidth": 100,
   "bracketSpacing": true,
   "arrowParens": "always",
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "singleAttributePerLine": true
 }
 ```
 
@@ -66,6 +67,7 @@ pnpm add -D prettier eslint-config-prettier
 dist
 node_modules
 pnpm-lock.yaml
+.claude
 ```
 
 **Update `eslint.config.js`** — add `eslint-config-prettier` as the **last** entry so it disables any ESLint rules that conflict with Prettier:
@@ -74,7 +76,7 @@ pnpm-lock.yaml
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+import { reactRefresh } from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import eslintConfigPrettier from 'eslint-config-prettier/flat'
@@ -87,7 +89,7 @@ export default defineConfig([
       js.configs.recommended,
       tseslint.configs.recommended,
       reactHooks.configs.flat.recommended,
-      reactRefresh.configs.vite,
+      reactRefresh.configs.vite(),
     ],
     languageOptions: {
       ecmaVersion: 2020,
@@ -134,11 +136,21 @@ pnpm exec lint-staged
 ```json
 {
   "lint-staged": {
-    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{ts,tsx,js,mjs,cjs}": ["eslint --fix", "prettier --write"],
     "*.{json,md,css,html,yml,yaml}": ["prettier --write"]
   }
 }
 ```
+
+> The JS glob (`js,mjs,cjs`) ensures config files like `eslint.config.js` are also linted and formatted on commit.
+
+**Create `.husky/pre-push` for type-checking:**
+
+```bash
+pnpm exec tsc -b
+```
+
+> `tsc` is project-wide and can't meaningfully check individual staged files, so a pre-push hook (which runs less frequently) is the right place for it. This catches type errors before they reach the remote.
 
 > Husky requires a git repo — make sure Step 1 is done first.
 
