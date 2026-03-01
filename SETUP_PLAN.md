@@ -4,7 +4,7 @@
 
 This is a fresh Vite 7 + React 19 + TypeScript 5.9 project (scaffolded via `pnpm create vite`) that still contains the default template boilerplate (counter demo, spinning logos, placeholder CSS). The goal is to set it up with industry best practices before building any dashboard features. The project uses pnpm as its package manager.
 
-**Current state:** Steps 1–5 are complete (git, path aliases, prettier/eslint, husky/lint-staged, vitest). Remaining steps: folder structure, React Router v7, Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars, boilerplate cleanup.
+**Current state:** Steps 1–6 are complete (git, path aliases, prettier/eslint, husky/lint-staged, vitest, TanStack Router). Remaining steps: Tailwind v4 + shadcn/ui (7), Zustand (8), TanStack Query (9), env vars (10), boilerplate cleanup (11).
 
 ---
 
@@ -12,6 +12,12 @@ This is a fresh Vite 7 + React 19 + TypeScript 5.9 project (scaffolded via `pnpm
 
 - Run `git init`, add all files, create initial commit
 - Update `.gitignore` to include `coverage/`, `.env`, `.env.local`, `.env.*.local`
+
+**Verify:**
+
+```bash
+git log --oneline     # Confirm initial commit exists
+```
 
 ## Step 2: Path Aliases (`@/`) ✅
 
@@ -34,6 +40,12 @@ export default defineConfig({
 ```
 
 `@types/node` is already installed, so the `path` import works out of the box.
+
+**Verify:**
+
+```bash
+pnpm build            # Alias resolves, no type errors
+```
 
 ## Step 3: Prettier + ESLint Integration ✅
 
@@ -59,7 +71,7 @@ pnpm add -D prettier eslint-config-prettier
 }
 ```
 
-> Note: `prettier-plugin-tailwindcss` will be added to the plugins array in Step 8.
+> Note: `prettier-plugin-tailwindcss` will be added to the plugins array in Step 7.
 
 **Create `.prettierignore`:**
 
@@ -116,6 +128,13 @@ export default defineConfig([
 }
 ```
 
+**Verify:**
+
+```bash
+pnpm lint             # ESLint clean
+pnpm format:check     # Prettier reports all files formatted
+```
+
 ## Step 4: Husky + lint-staged (Pre-commit Hooks) ✅
 
 **Install:**
@@ -153,6 +172,12 @@ pnpm exec tsc -b
 > `tsc` is project-wide and can't meaningfully check individual staged files, so a pre-push hook (which runs less frequently) is the right place for it. This catches type errors before they reach the remote.
 
 > Husky requires a git repo — make sure Step 1 is done first.
+
+**Verify:**
+
+```bash
+# Make a test commit to confirm hooks run lint-staged successfully
+```
 
 ## Step 5: Vitest + React Testing Library ✅
 
@@ -208,8 +233,6 @@ describe('setup verification', () => {
 })
 ```
 
-> **Note:** The original plan included `import tailwindcss from '@tailwindcss/vite'` and `tailwindcss()` in the plugins array here, but Tailwind isn't installed until Step 8. It also included `css: true` in the test config, which is unnecessary without Tailwind/CSS Modules. The test file originally imported `{ describe, it, expect }` from `'vitest'`, but with `globals: true` these are available automatically — explicit imports would cause duplicate-identifier errors in strict TypeScript. The `tsconfig.app.json` update was also missing from the original plan.
-
 **Add scripts to `package.json`:**
 
 ```json
@@ -222,100 +245,138 @@ describe('setup verification', () => {
 }
 ```
 
-## Step 6: Folder Structure
+**Verify:**
 
-Create this directory structure under `src/`:
-
-```
-src/
-  components/
-    ui/                # shadcn/ui components (populated by CLI in Step 8)
-    layout/            # Sidebar, Header, Footer
-  pages/
-    dashboard/         # Dashboard page
-    transactions/      # Transactions page
-    accounts/          # Accounts page
-    budgets/           # Budgets page
-    settings/          # Settings page
-  hooks/               # Custom React hooks
-  lib/                 # Utilities (utils.ts with cn(), formatCurrency, etc.)
-  services/            # API service functions
-  stores/              # Zustand stores
-  types/               # Shared TypeScript interfaces
-  test/                # Test setup (created in Step 5)
-  assets/              # Static assets (already exists)
+```bash
+pnpm test:run         # Vitest runs the sanity test and passes
+pnpm lint             # ESLint clean
+pnpm build            # No type errors, production build succeeds
 ```
 
-**Conventions:**
-
-- Page-specific sub-components live inside their page directory (e.g., `pages/dashboard/BalanceCard.tsx`)
-- Components used by 2+ pages go in `components/`
-- One store per domain concept in `stores/`
-- API functions in `services/`, query hooks in `hooks/`
-
-## Step 7: React Router v7
+## Step 6: TanStack Router (Virtual File Routes) ✅
 
 **Install:**
 
 ```bash
-pnpm add react-router
+pnpm add @tanstack/react-router
+pnpm add -D @tanstack/router-plugin @tanstack/router-devtools @tanstack/virtual-file-routes
 ```
 
-> In React Router v7, the package is `react-router` (not `react-router-dom`).
+**Update `vite.config.ts`** — add the TanStack Router plugin **before** the React plugin, using `virtualRouteConfig` to point at a `routes.ts` config file:
 
-**Create placeholder page components** in each page directory (e.g., `src/pages/dashboard/DashboardPage.tsx`):
+```diff
+ /// <reference types="vitest/config" />
+ import { defineConfig } from 'vite'
++import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+ import react from '@vitejs/plugin-react'
+ import path from 'path'
+
+ export default defineConfig({
+-  plugins: [react()],
++  plugins: [
++    TanStackRouterVite({
++      quoteStyle: 'single',
++      virtualRouteConfig: './routes.ts',
++    }),
++    react(),
++  ],
+   resolve: {
+```
+
+> The TanStack Router plugin must come **before** `react()`. It auto-generates `src/routeTree.gen.ts` from the virtual route config. The `quoteStyle: 'single'` option matches our Prettier config. The `virtualRouteConfig` option enables virtual file routes — route-to-file mappings are defined explicitly in `routes.ts` instead of relying on filesystem naming conventions.
+
+**Create `routes.ts`** (project root) — defines route-to-file mappings:
+
+```ts
+import { rootRoute, index, route } from '@tanstack/virtual-file-routes'
+
+export const routes = rootRoute('__root.tsx', [
+  index('dashboard.tsx'),
+  route('/transactions', 'transactions.tsx'),
+  route('/accounts', 'accounts.tsx'),
+  route('/budgets', 'budgets.tsx'),
+  route('/settings', 'settings.tsx'),
+])
+```
+
+> File paths are relative to `src/routes/`. You control the URL-to-file mapping explicitly — no filesystem naming conventions required.
+
+**Add `src/routeTree.gen.ts` to `.gitignore`** — this file is auto-generated on `pnpm dev`.
+
+**Create `src/routes/__root.tsx`:**
 
 ```tsx
-export default function DashboardPage() {
+import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { TanStackRouterDevtools } from '@tanstack/router-devtools'
+
+export const Route = createRootRoute({
+  component: RootComponent,
+})
+
+function RootComponent() {
+  return (
+    <>
+      <Outlet />
+      <TanStackRouterDevtools />
+    </>
+  )
+}
+```
+
+**Create placeholder route files** — `src/routes/dashboard.tsx`, `transactions.tsx`, `accounts.tsx`, `budgets.tsx`, `settings.tsx`:
+
+```tsx
+// src/routes/dashboard.tsx
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/')({
+  component: DashboardComponent,
+})
+
+function DashboardComponent() {
   return <div>Dashboard</div>
 }
 ```
 
-Do the same for `TransactionsPage`, `AccountsPage`, `BudgetsPage`, `SettingsPage`.
+Same pattern for each route, changing the path and component name.
 
-**Replace `src/App.tsx`:**
+**Replace `src/main.tsx`:**
 
 ```tsx
-import { BrowserRouter, Routes, Route } from 'react-router'
-import DashboardPage from '@/pages/dashboard/DashboardPage'
-import TransactionsPage from '@/pages/transactions/TransactionsPage'
-import AccountsPage from '@/pages/accounts/AccountsPage'
-import BudgetsPage from '@/pages/budgets/BudgetsPage'
-import SettingsPage from '@/pages/settings/SettingsPage'
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { createRouter, RouterProvider } from '@tanstack/react-router'
+import { routeTree } from './routeTree.gen'
+import './index.css'
 
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={<DashboardPage />}
-        />
-        <Route
-          path="/transactions"
-          element={<TransactionsPage />}
-        />
-        <Route
-          path="/accounts"
-          element={<AccountsPage />}
-        />
-        <Route
-          path="/budgets"
-          element={<BudgetsPage />}
-        />
-        <Route
-          path="/settings"
-          element={<SettingsPage />}
-        />
-      </Routes>
-    </BrowserRouter>
-  )
+const router = createRouter({ routeTree })
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
 }
 
-export default App
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <RouterProvider router={router} />
+  </StrictMode>,
+)
 ```
 
-## Step 8: Tailwind CSS v4 + shadcn/ui
+**Delete `src/App.tsx`** — routing is now handled by TanStack Router; no App component needed.
+
+**ESLint override:** An override was added to `eslint.config.js` to disable `react-refresh/only-export-components` for `src/routes/**/*.{ts,tsx}`, since TanStack Router route files export a `Route` config object alongside the component.
+
+**Verify:**
+
+```bash
+pnpm lint             # ESLint clean
+pnpm build            # No type errors, production build succeeds
+pnpm dev              # Navigate between /, /transactions, /accounts, /budgets, /settings
+```
+
+## Step 7: Tailwind CSS v4 + shadcn/ui
 
 ### Tailwind CSS
 
@@ -331,13 +392,27 @@ pnpm add -D prettier-plugin-tailwindcss
 ```diff
  /// <reference types="vitest/config" />
  import { defineConfig } from 'vite'
+ import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
  import react from '@vitejs/plugin-react'
 +import tailwindcss from '@tailwindcss/vite'
  import path from 'path'
 
  export default defineConfig({
--  plugins: [react()],
-+  plugins: [react(), tailwindcss()],
+-  plugins: [
+-    TanStackRouterVite({
+-      quoteStyle: 'single',
+-      virtualRouteConfig: './routes.ts',
+-    }),
+-    react(),
+-  ],
++  plugins: [
++    TanStackRouterVite({
++      quoteStyle: 'single',
++      virtualRouteConfig: './routes.ts',
++    }),
++    react(),
++    tailwindcss(),
++  ],
    resolve: {
 ```
 
@@ -418,7 +493,15 @@ Components most useful for a finance dashboard:
 - `tabs` — switching views within a page
 - `skeleton` — loading states
 
-## Step 9: Zustand (State Management)
+**Verify:**
+
+```bash
+pnpm lint             # ESLint clean
+pnpm build            # No type errors, production build succeeds
+pnpm dev              # Tailwind styles render correctly
+```
+
+## Step 8: Zustand (State Management)
 
 **Install:**
 
@@ -453,7 +536,14 @@ export const useAccountStore = create<AccountState>((set) => ({
 
 **Convention:** One store per domain — `useAccountStore`, `useTransactionStore`, `useBudgetStore`, etc.
 
-## Step 10: TanStack Query + Mock Data
+**Verify:**
+
+```bash
+pnpm lint             # ESLint clean
+pnpm build            # No type errors, production build succeeds
+```
+
+## Step 9: TanStack Query + Mock Data
 
 **Install:**
 
@@ -462,15 +552,16 @@ pnpm add @tanstack/react-query
 pnpm add -D @tanstack/react-query-devtools
 ```
 
-**Update `src/main.tsx`:**
+**Update `src/main.tsx`** — wrap `RouterProvider` with `QueryClientProvider`:
 
 ```tsx
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import '@/index.css'
-import App from '@/App'
+import { createRouter, RouterProvider } from '@tanstack/react-router'
+import { routeTree } from './routeTree.gen'
+import './index.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -481,10 +572,18 @@ const queryClient = new QueryClient({
   },
 })
 
+const router = createRouter({ routeTree })
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <RouterProvider router={router} />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </StrictMode>,
@@ -519,7 +618,15 @@ export function useTransactions() {
 }
 ```
 
-## Step 11: Environment Variables
+**Verify:**
+
+```bash
+pnpm lint             # ESLint clean
+pnpm build            # No type errors, production build succeeds
+pnpm dev              # Dev server starts, devtools accessible
+```
+
+## Step 10: Environment Variables
 
 **Create `.env.example`** (commit this):
 
@@ -545,12 +652,27 @@ interface ImportMeta {
 }
 ```
 
-## Step 12: Clean Up Boilerplate
+**Verify:**
+
+```bash
+pnpm lint             # ESLint clean
+pnpm build            # No type errors, production build succeeds
+```
+
+## Step 11: Clean Up Boilerplate
 
 - Delete `src/assets/react.svg`
 - Delete `public/vite.svg`
 - Update `index.html` — change `<title>` to "Finance Dashboard", remove Vite favicon reference
-- `App.tsx`, `main.tsx`, and `index.css` are already rewritten in previous steps
+- `main.tsx` and `index.css` are already rewritten in previous steps
+
+**Verify:**
+
+```bash
+pnpm lint             # ESLint clean
+pnpm build            # No type errors, production build succeeds
+pnpm dev              # Dev server starts, app renders correctly
+```
 
 ---
 
@@ -564,18 +686,18 @@ interface ImportMeta {
 pnpm add -D prettier eslint-config-prettier husky lint-staged vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
 ```
 
-### Remaining (Steps 6–12)
+### Remaining (Steps 6–11)
 
 **Production:**
 
 ```bash
-pnpm add react-router zustand @tanstack/react-query
+pnpm add @tanstack/react-router zustand @tanstack/react-query
 ```
 
 **Dev:**
 
 ```bash
-pnpm add -D tailwindcss @tailwindcss/vite prettier-plugin-tailwindcss @tanstack/react-query-devtools
+pnpm add -D @tanstack/router-plugin @tanstack/router-devtools @tanstack/virtual-file-routes tailwindcss @tailwindcss/vite prettier-plugin-tailwindcss @tanstack/react-query-devtools
 ```
 
 **CLI (run once):**
@@ -594,5 +716,5 @@ pnpm dlx shadcn@latest add button card table badge input select dialog tabs sepa
 - [x] `pnpm lint` — ESLint runs with no errors
 - [x] `pnpm format:check` — Prettier reports all files formatted
 - [x] Make a test commit — Husky pre-commit hook runs lint-staged successfully
-- [ ] `pnpm dev` — dev server starts, dashboard page renders with Tailwind styles (needs Step 8)
-- [ ] Navigate between routes (`/`, `/transactions`, etc.) — React Router works (needs Step 7)
+- [ ] `pnpm dev` — dev server starts, dashboard page renders with Tailwind styles (needs Step 7)
+- [x] Navigate between routes (`/`, `/transactions`, etc.) — TanStack Router works

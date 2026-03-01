@@ -28,13 +28,15 @@ Test files: `src/**/*.{test,spec}.{ts,tsx}`. Setup file: `src/test/setup.ts`.
 
 **Stack**: Vite 7 + React 19 + TypeScript 5.9 (strict mode)
 
-This is a finance dashboard app in early setup phase. The project follows a 12-step setup plan in `SETUP_PLAN.md` — steps 1-5 are complete (git, path aliases, prettier/eslint, husky/lint-staged, vitest). Remaining steps add: folder structure, React Router v7, Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars.
+This is a finance dashboard app in early setup phase. The project follows an 11-step setup plan in `SETUP_PLAN.md` — steps 1–6 are complete (git, path aliases, prettier/eslint, husky/lint-staged, vitest, TanStack Router). Remaining steps add: Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars, boilerplate cleanup.
 
 **Path alias**: `@/*` maps to `./src/*` (configured in both tsconfig.app.json and vite.config.ts).
 
+**Routing**: TanStack Router with virtual file routes. Route-to-file mappings are defined in `routes.ts` (project root); route files live in `src/routes/`. The router plugin auto-generates `src/routeTree.gen.ts` (gitignored).
+
 **Planned architecture** (from SETUP_PLAN.md):
 
-- `src/pages/` — route-level components (dashboard, transactions, accounts, budgets, settings)
+- `src/routes/` — route files (dashboard, transactions, accounts, budgets, settings)
 - `src/components/ui/` — shadcn/ui components
 - `src/components/layout/` — Sidebar, Header, Footer
 - `src/stores/` — Zustand stores (one per domain)

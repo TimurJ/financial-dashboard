@@ -17,11 +17,15 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@tanstack/react-router": "^1.163.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tanstack/router-devtools": "^1.163.3",
+    "@tanstack/router-plugin": "^1.164.0",
+    "@tanstack/virtual-file-routes": "^1.161.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
