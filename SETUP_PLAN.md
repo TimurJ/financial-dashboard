@@ -4,7 +4,7 @@
 
 This is a fresh Vite 7 + React 19 + TypeScript 5.9 project (scaffolded via `pnpm create vite`) that still contains the default template boilerplate (counter demo, spinning logos, placeholder CSS). The goal is to set it up with industry best practices before building any dashboard features. The project uses pnpm as its package manager.
 
-**Current state:** Steps 1–6 are complete (git, path aliases, prettier/eslint, husky/lint-staged, vitest, TanStack Router). Remaining steps: Tailwind v4 + shadcn/ui (7), Zustand (8), TanStack Query (9), env vars (10), boilerplate cleanup (11).
+**Current state:** Steps 1–7 are complete (git, path aliases, prettier/eslint, husky/lint-staged, vitest, TanStack Router, Tailwind v4 + shadcn/ui). Remaining steps: Zustand (8), TanStack Query (9), env vars (10), boilerplate cleanup (11).
 
 ---
 
@@ -376,122 +376,52 @@ pnpm build            # No type errors, production build succeeds
 pnpm dev              # Navigate between /, /transactions, /accounts, /budgets, /settings
 ```
 
-## Step 7: Tailwind CSS v4 + shadcn/ui
+## Step 7: Tailwind CSS v4 + shadcn/ui ✅
 
 ### Tailwind CSS
 
-**Install:**
+**Installed** `tailwindcss` + `@tailwindcss/vite` and added `tailwindcss()` plugin to `vite.config.ts` (after `react()`).
 
-```bash
-pnpm add tailwindcss @tailwindcss/vite
-pnpm add -D prettier-plugin-tailwindcss
-```
+**Replaced `src/index.css`** with the shadcn-generated stylesheet containing OKLch theme tokens, dark mode variables (`.dark` class), sidebar tokens, chart colors, and base layer styles. Uses `tw-animate-css` for animation utilities and `shadcn/tailwind.css` for component base styles.
 
-**Update `vite.config.ts`** — add the Tailwind plugin:
+**Deleted `src/App.css`** — all styling is now via Tailwind utility classes.
 
-```diff
- /// <reference types="vitest/config" />
- import { defineConfig } from 'vite'
- import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
- import react from '@vitejs/plugin-react'
-+import tailwindcss from '@tailwindcss/vite'
- import path from 'path'
+### Prettier Tailwind plugin
 
- export default defineConfig({
--  plugins: [
--    TanStackRouterVite({
--      quoteStyle: 'single',
--      virtualRouteConfig: './routes.ts',
--    }),
--    react(),
--  ],
-+  plugins: [
-+    TanStackRouterVite({
-+      quoteStyle: 'single',
-+      virtualRouteConfig: './routes.ts',
-+    }),
-+    react(),
-+    tailwindcss(),
-+  ],
-   resolve: {
-```
-
-**Replace `src/index.css` contents:**
-
-```css
-@import 'tailwindcss';
-
-@theme {
-  --color-primary: #3b82f6;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #f1f5f9;
-  --color-secondary-foreground: #0f172a;
-  --color-accent: #f1f5f9;
-  --color-accent-foreground: #0f172a;
-  --color-destructive: #ef4444;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
-  --color-card: #ffffff;
-  --color-card-foreground: #0f172a;
-  --color-border: #e2e8f0;
-  --color-input: #e2e8f0;
-  --color-background: #ffffff;
-  --color-foreground: #0f172a;
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-}
-```
-
-**Delete `src/App.css`** — all styling is now via Tailwind utility classes.
-
-**Update `.prettierrc.json`** — add the Tailwind plugin:
-
-```json
-{
-  "semi": false,
-  "singleQuote": true,
-  "tabWidth": 2,
-  "trailingComma": "all",
-  "printWidth": 100,
-  "bracketSpacing": true,
-  "arrowParens": "always",
-  "endOfLine": "lf",
-  "plugins": ["prettier-plugin-tailwindcss"],
-  "tailwindStylesheet": "./src/index.css"
-}
-```
+**Installed** `prettier-plugin-tailwindcss` and added it to `.prettierrc.json` with `tailwindStylesheet: "./src/index.css"` so class sorting works correctly.
 
 ### shadcn/ui
 
-**Initialize:**
+**Initialized** with `pnpm dlx shadcn@latest init`:
 
-```bash
-pnpm dlx shadcn@latest init
-```
-
-When prompted:
-
-- Style: **New York**
-- Base color: **Slate**
+- Style: **base-mira** (Base UI)
+- Base color: **zinc**
 - CSS variables: **Yes**
-- Components location: `src/components/ui`
-- Utils location: `src/lib/utils.ts`
+- Icon library: **lucide**
+- Config written to `components.json`
 
-**Add starter components:**
+**Added `cn()` utility** at `src/lib/utils.ts` (uses `clsx` + `tailwind-merge`).
 
-```bash
-pnpm dlx shadcn@latest add button card table badge input select dialog tabs separator skeleton
+**Installed `button` component** via `pnpm dlx shadcn@latest add button` → `src/components/ui/button.tsx`.
+
+### Ignore configs
+
+- Added `src/components/ui` to `.prettierignore` so shadcn-generated files keep their original format
+- Added `src/components/ui` to ESLint `globalIgnores` in `eslint.config.js`
+
+### Dependencies added
+
+**Production:**
+
+```
+tailwindcss, @tailwindcss/vite, @base-ui/react, class-variance-authority, clsx, tailwind-merge, lucide-react
 ```
 
-Components most useful for a finance dashboard:
+**Dev:**
 
-- `card` — dashboard widgets, account summaries, balance displays
-- `table` — transaction lists
-- `badge` — status indicators (paid, pending, overdue)
-- `button`, `input`, `select`, `dialog` — basic interactions
-- `tabs` — switching views within a page
-- `skeleton` — loading states
+```
+prettier-plugin-tailwindcss, shadcn, tw-animate-css
+```
 
 **Verify:**
 
@@ -678,33 +608,39 @@ pnpm dev              # Dev server starts, app renders correctly
 
 ## All Dependencies Summary
 
-### Already installed (Steps 1–5)
-
-**Dev:**
-
-```bash
-pnpm add -D prettier eslint-config-prettier husky lint-staged vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
-```
-
-### Remaining (Steps 6–11)
+### Already installed (Steps 1–7)
 
 **Production:**
 
 ```bash
-pnpm add @tanstack/react-router zustand @tanstack/react-query
+pnpm add @tanstack/react-router tailwindcss @tailwindcss/vite @base-ui/react class-variance-authority clsx tailwind-merge lucide-react
 ```
 
 **Dev:**
 
 ```bash
-pnpm add -D @tanstack/router-plugin @tanstack/router-devtools @tanstack/virtual-file-routes tailwindcss @tailwindcss/vite prettier-plugin-tailwindcss @tanstack/react-query-devtools
+pnpm add -D prettier eslint-config-prettier husky lint-staged vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom @tanstack/router-plugin @tanstack/router-devtools @tanstack/virtual-file-routes prettier-plugin-tailwindcss shadcn tw-animate-css
 ```
 
-**CLI (run once):**
+**CLI (already run):**
 
 ```bash
 pnpm dlx shadcn@latest init
-pnpm dlx shadcn@latest add button card table badge input select dialog tabs separator skeleton
+pnpm dlx shadcn@latest add button
+```
+
+### Remaining (Steps 8–11)
+
+**Production:**
+
+```bash
+pnpm add zustand @tanstack/react-query
+```
+
+**Dev:**
+
+```bash
+pnpm add -D @tanstack/react-query-devtools
 ```
 
 ---
@@ -716,5 +652,5 @@ pnpm dlx shadcn@latest add button card table badge input select dialog tabs sepa
 - [x] `pnpm lint` — ESLint runs with no errors
 - [x] `pnpm format:check` — Prettier reports all files formatted
 - [x] Make a test commit — Husky pre-commit hook runs lint-staged successfully
-- [ ] `pnpm dev` — dev server starts, dashboard page renders with Tailwind styles (needs Step 7)
+- [x] `pnpm dev` — dev server starts, dashboard page renders with Tailwind styles
 - [x] Navigate between routes (`/`, `/transactions`, etc.) — TanStack Router works

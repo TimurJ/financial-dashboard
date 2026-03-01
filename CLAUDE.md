@@ -28,7 +28,7 @@ Test files: `src/**/*.{test,spec}.{ts,tsx}`. Setup file: `src/test/setup.ts`.
 
 **Stack**: Vite 7 + React 19 + TypeScript 5.9 (strict mode)
 
-This is a finance dashboard app in early setup phase. The project follows an 11-step setup plan in `SETUP_PLAN.md` — steps 1–6 are complete (git, path aliases, prettier/eslint, husky/lint-staged, vitest, TanStack Router). Remaining steps add: Tailwind v4 + shadcn/ui, Zustand, TanStack Query, env vars, boilerplate cleanup.
+This is a finance dashboard app in early setup phase. The project follows an 11-step setup plan in `SETUP_PLAN.md` — steps 1–7 are complete (git, path aliases, prettier/eslint, husky/lint-staged, vitest, TanStack Router, Tailwind v4 + shadcn/ui). Remaining steps add: Zustand, TanStack Query, env vars, boilerplate cleanup.
 
 **Path alias**: `@/*` maps to `./src/*` (configured in both tsconfig.app.json and vite.config.ts).
 
